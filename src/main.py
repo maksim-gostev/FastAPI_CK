@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+
+from employeer.router import employee_router
 from task.router import tasks_router
 
 app = FastAPI(
@@ -14,3 +16,4 @@ def read_root():
 
 
 app.include_router(tasks_router)
+app.include_router(employee_router)
