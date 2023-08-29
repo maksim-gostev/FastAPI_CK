@@ -1,12 +1,13 @@
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from employeer.models import EmployeerModel
 from employeer.structures import EmployeeStructures
+from task.models import TasksModel, StatusEnum
 
 
 async def get_all_employees(db: AsyncSession):
@@ -46,3 +47,20 @@ async def delete_employee(db: AsyncSession, employee_id: int):
     await db.execute(query)
     await db.commit()
     return {'status': status.HTTP_200_OK}
+
+
+async def get_busy_employees(db: AsyncSession):
+    subquery = (
+        select(TasksModel.employee_id, func.count())
+        .where(TasksModel.status == StatusEnum.doing)
+        .group_by(TasksModel.employee_id).subquery()
+    )
+
+    query = (
+        select(EmployeerModel)
+        .join(subquery, subquery.c.employee_id == EmployeerModel.id)
+        .order_by(subquery.c.count)
+    )
+
+    res = await db.execute(query)
+    return res.scalars().all()

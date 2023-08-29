@@ -36,3 +36,8 @@ async def update_employee(employee_id: int, data: EmployeeStructures,
 @employee_router.delete("/{employee_id}")
 async def delete_employee(employee_id: int, session: AsyncSession = Depends(get_async_session)):
     return await service.delete_employee(session, employee_id)
+
+
+@employee_router.get("/busy_employees/", response_model=list[EmployeeStructures])
+async def get_busy_employees(session: AsyncSession = Depends(get_async_session)):
+    return await service.get_busy_employees(session)
